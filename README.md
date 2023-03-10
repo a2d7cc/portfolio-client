@@ -8,3 +8,9 @@ npx create-next-app@12.3.4 client --ts
 
 # Settings prettiers, tsconfig, next.config, .env
 
+# Writting Layout
+
+# Install react, axios
+```
+
+```
