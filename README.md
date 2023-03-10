@@ -24,6 +24,8 @@ export const axiosClassic = axios.create({
 
 ```
 
+# Creating MainProvider
+
 ## Client react-query
 
 ```
@@ -116,6 +118,132 @@ export const getAdminHomeUrlLink = () => getAdminUrlLink('').slice(0, -1)
 
 ```
 
+## Creating HeadProvider
+
+```
+import Head from 'next/head'
+import { FC, PropsWithChildren } from 'react'
+
+import Favicons from './Favicons'
+
+const HeadProvider: FC<PropsWithChildren> = ({ children }) => {
+	return (
+		<>
+			<Head>
+				<meta charSet="UTF-8" />
+				<meta
+					name="viewport"
+					content="width=device-width, initial-scale=1, maximum-scale=5"
+				/>
+
+				<Favicons />
+
+				<meta name="theme-color" content={'#181B1E'} />
+				<meta name="msapplication-navbutton-color" content={'#181B1E'} />
+				<meta
+					name="apple-mobile-web-app-status-bar-style"
+					content={'#181B1E'}
+				/>
+				<link rel="manifest" href="/manifest.json" />
+			</Head>
+			{children}
+		</>
+	)
+}
+
+export default HeadProvider
+
+```
+
+### Creating constants file in configs folder
+
+```
+export const accentColor = '#E30B13'
+export const bgColor = '#191B1F'
+
+export const IS_SERVER = typeof window === 'undefined'
+export const IS_CLIENT = typeof window !== 'undefined'
+export const IS_PRODUCTION = process.env.APP_ENV === 'production'
+
+```
+
+### Creating Favicons component
+
+```
+const Favicons = () => {
+	return (
+		<>
+			{/* https://iconifier.net/ */}
+			<link
+				rel="shortcut icon"
+				href="/favicons/favicon.ico"
+				type="image/x-icon"
+			/>
+			<link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+			<link
+				rel="apple-touch-icon"
+				sizes="57x57"
+				href="/favicons/apple-touch-icon-57x57.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="72x72"
+				href="/favicons/apple-touch-icon-72x72.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="76x76"
+				href="/favicons/apple-touch-icon-76x76.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="114x114"
+				href="/favicons/apple-touch-icon-114x114.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="120x120"
+				href="/favicons/apple-touch-icon-120x120.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="144x144"
+				href="/favicons/apple-touch-icon-144x144.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="152x152"
+				href="/favicons/apple-touch-icon-152x152.png"
+			/>
+			<link
+				rel="apple-touch-icon"
+				sizes="180x180"
+				href="/favicons/apple-touch-icon-180x180.png"
+			/>
+		</>
+	)
+}
+
+export default Favicons
+
+```
+
+### Wrapping MainProvider
+
+```
+const MainProvider: FC<PropsWithChildren> = ({ children }) => {
+	return (
+		<HeadProvider>
+			<Provider store={store}>
+				<QueryClientProvider client={queryClient}>
+					<Layout>{children}</Layout>
+				</QueryClientProvider>
+			</Provider>
+		</HeadProvider>
+	)
+}
+```
+
 ## Creating Meta component
 
 ```
@@ -168,7 +296,50 @@ export default Meta
 ```
 
 # Install redux
+
 ```
 npm i @reduxjs/toolkit react-redux
+```
 
+### Creating Store file
+
+```
+import { configureStore } from '@reduxjs/toolkit'
+import { reducers } from './rootReducer'
+
+export const store = configureStore({
+	reducer: reducers,
+	devTools: true,
+})
+
+export type TypeRootState = ReturnType<typeof store.getState>
+
+```
+
+### Creating Root Reducer
+
+```
+/* import { reducer as toastrReducer } from 'react-redux-toastr'
+ */
+/* import { reducer as userReducer } from './user/user.slice' */
+
+export const reducers = {
+/* 	user: userReducer,
+	toastr: toastrReducer, */
+}
+
+```
+
+### Wrapping with react Provider Main Provider
+
+```
+const MainProvider: FC<PropsWithChildren> = ({ children }) => {
+	return (
+		<Provider store ={store}>
+			<QueryClientProvider client={queryClient}>
+				<Layout>{children}</Layout>
+			</QueryClientProvider>
+		</Provider>
+	)
+}
 ```
