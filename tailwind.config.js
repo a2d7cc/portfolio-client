@@ -1,3 +1,5 @@
+/** @type {import('tailwindcss').Config} */
+
 const colors = require('tailwindcss/colors')
 const plugin = require('tailwindcss/plugin')
 
@@ -10,27 +12,24 @@ module.exports = {
 		'./app/components/**/*.{js,ts,jsx,tsx}',
 	],
 	theme: {
-		fontFamily: {
-			primary: 'Orbitron',
-			secondary: 'Rajdhani',
-			tertiary: 'Aldrich',
-		},
-		container: {
-			padding: {
-				DEFAULT: '15px',
-			},
-		},
-		screens: {
-			sm: '640px',
-			md: '768px',
-			lg: '960px',
-			xl: '1200px',
-		},
 		colors: {
-			primary: '#0a0a0a',
-			accent: '#B809C3',
+			accent,
+			lightAccent,
 			black: colors.black,
 			white: colors.white,
+			gray: {
+				300: '#d9dae8',
+				500: '#999AA5',
+				600: '#66676E',
+				700: '#39393f',
+				800: '#242529',
+				900: '#191B1F',
+				950: '#101215',
+			},
+			transparent: colors.transparent,
+			yellow: {
+				700: '#F5C521',
+			},
 		},
 		extend: {
 			spacing: {
@@ -84,7 +83,35 @@ module.exports = {
 		require('@tailwindcss/forms'),
 		require('@tailwindcss/aspect-ratio'),
 		plugin(({ addComponents, theme, addUtilities }) => {
-			addComponents({}),
+			addComponents({
+				'.btn-primary': {
+					backgroundColor: accent,
+					color: '#fff',
+					borderRadius: '0.65rem',
+					transition: 'background-color .3s ease-in-out',
+					'&:hover': {
+						backgroundColor: '#ff0009',
+					},
+				},
+
+				'.text-link': {
+					textUnderlineOffset: 4,
+					color: 'rgba(255, 255, 255, .9)',
+					transition: 'text-decoration-color .3s ease-in-out',
+					textDecorationLine: 'underline',
+					textDecorationColor: 'rgba(255, 255, 255, 0.2)',
+					'&:hover': {
+						textDecorationColor: 'rgba(255, 255, 255, 0.9)',
+					},
+				},
+
+				'.air-block': {
+					borderRadius: theme('borderRadius.layout'),
+					backgroundColor: theme('colors.gray.950'),
+					color: theme('colors.white'),
+					boxShadow: theme('boxShadow.lg'),
+				},
+			}),
 				addUtilities({
 					'.text-shadow': {
 						textShadow: '1px 1px rgba(0, 0, 0, 0.4)',
