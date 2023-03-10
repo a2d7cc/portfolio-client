@@ -1,11 +1,10 @@
+import '@/assets/styles/globals.css'
 import MainProvider from '@/providers/MainProvider'
 import type { AppProps } from 'next/app'
-import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }: AppProps) {
 	return (
-		
-    <MainProvider>
+		<MainProvider>
 			<Component {...pageProps} />
 		</MainProvider>
 	)

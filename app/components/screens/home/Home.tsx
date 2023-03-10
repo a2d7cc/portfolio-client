@@ -1,12 +1,12 @@
-import Layout from '@/components/Layout/Layout'
+import Meta from '@/utils/Meta/Meta'
 import { FC } from 'react'
 import { IHome } from './home.interface'
 
 const Home: FC<IHome> = () => {
 	return (
-		<Layout>
+		<Meta title="Portfolio" description="Welcome to my developer site">
 			<div>Home</div>
-		</Layout>
+		</Meta>
 	)
 }
 

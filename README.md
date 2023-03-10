@@ -27,6 +27,7 @@ export const axiosClassic = axios.create({
 ## Client react-query
 
 ```
+
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
@@ -36,11 +37,13 @@ const queryClient = new QueryClient({
 })
 
 const MainProvider: FC<PropsWithChildren> = ({ children }) => {
-	return <div>
-		<QueryClientProvider client={queryClient}>
-
-		</QueryClientProvider>
-	</div>
+	return (
+		<div>
+			<QueryClientProvider client={queryClient}>
+				<Layout>{children}</Layout>
+			</QueryClientProvider>
+		</div>
+	)
 }
 
 export default MainProvider
@@ -110,5 +113,62 @@ export const getArticleUrlLink = (slug: string) => `/article/${slug}`
 
 export const getAdminUrlLink = (url: string) => `/manage/${url}`
 export const getAdminHomeUrlLink = () => getAdminUrlLink('').slice(0, -1)
+
+```
+
+## Creating Meta component
+
+```
+import Head from 'next/head'
+import { useRouter } from 'next/router'
+import { FC } from 'react'
+
+import logoImage from '@/assets/images/logo.svg'
+
+import { onlyText } from '@/utils/string/clearText'
+
+import { siteName, titleMerge } from '@/configs/seo.config'
+import { ISeo } from './Meta.interface'
+
+const Meta: FC<ISeo> = ({ children, title, description, image }) => {
+	const { asPath } = useRouter()
+	const currentUrl = `${process.env.APP_URL}${asPath}`
+
+	return (
+		<>
+			<title itemProp="headline">{titleMerge(title)}</title>
+			{description ? (
+				<Head>
+					<meta
+						itemProp="description"
+						name="description"
+						content={onlyText(description, 152)}
+					/>
+					<link rel="canonical" href={currentUrl} />
+					<meta property="og:locale" content="en" />
+					<meta property="og:title" content={titleMerge(title)} />
+					<meta property="og:url" content={currentUrl} />
+					<meta property="og:image" content={image || logoImage.src} />
+					<meta property="og:site_name" content={siteName} />
+					<meta
+						property="og:description"
+						content={onlyText(description, 197)}
+					/>
+				</Head>
+			) : (
+				<meta name="robots" content="noindex, nofollow" />
+			)}
+			{children}
+		</>
+	)
+}
+
+export default Meta
+
+```
+
+# Install redux
+```
+npm i @reduxjs/toolkit react-redux
 
 ```

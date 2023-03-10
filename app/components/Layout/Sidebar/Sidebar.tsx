@@ -5,7 +5,6 @@ import { useAllCategories } from './useAllCategories'
 
 const Sidebar: FC<ISidebar> = () => {
 	const { isLoading, data: categories } = useAllCategories()
-	console.log(categories)
 
 	return <div className={styles.header}>Sidebar</div>
 }
