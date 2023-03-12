@@ -344,7 +344,7 @@ const MainProvider: FC<PropsWithChildren> = ({ children }) => {
 }
 ```
 
-# Skeleton Loader
+# Configure Skeleton Loader
 
 ## Install
 
@@ -373,4 +373,88 @@ const SkeletonLoader: FC<SkeletonProps> = ({ className, ...rest }) => {
 
 export default SkeletonLoader
 
+```
+
+# Configure redux-toast
+
+## Install
+
+```
+npm i react-redux-toastr  @types/react-redux-toastr
+```
+
+## Import styles in global.css
+
+```
+@import 'react-redux-toastr/src/styles/index';
+```
+
+## Configure reducer
+
+- rootReducer.ts
+
+```
+import { reducer as toastrReducer } from 'react-redux-toastr'
+
+export const reducers = {
+	toastr: toastrReducer
+}
+
+```
+
+- Show again rootReducer.ts
+
+```
+import { configureStore } from '@reduxjs/toolkit'
+import { reducers } from './rootReducer'
+
+export const store = configureStore({
+	reducer: reducers,
+	devTools: true,
+})
+
+export type TypeRootState = ReturnType<typeof store.getState>
+
+```
+
+## Creating Toast component
+
+```
+import React, { FC } from 'react'
+import ReduxToastrLib from 'react-redux-toastr'
+
+const ReduxToast:FC = () => {
+	return (
+		<ReduxToastrLib
+			newestOnTop={false}
+			preventDuplicates
+			progressBar
+			closeOnToastrClick
+			timeOut={4000}
+			transitionIn='fadeIn'
+			transitionOut='fadeOut'
+		/>
+	)
+}
+
+export default ReduxToast
+```
+
+## Put this component in MainProvider
+
+```
+const MainProvider: FC<PropsWithChildren> = ({ children }) => {
+	return (
+		<HeadProvider>
+			<Provider store={store}>
+				<QueryClientProvider client={queryClient}>
+					<ReduxToast />
+					<Layout>{children}</Layout>
+				</QueryClientProvider>
+			</Provider>
+		</HeadProvider>
+	)
+}
+
+export default MainProvider
 ```
