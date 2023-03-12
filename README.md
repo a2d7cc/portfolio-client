@@ -672,4 +672,128 @@ export default Auth
 		</Meta>
 	)
 ```
-## AuthFields
+
+## Writting field
+
+### Writting interface
+
+```
+export interface IFieldProps {
+	placeholder: string
+	error?: FieldError | undefined
+}
+
+type TypeInputPropsField = InputHTMLAttributes<HTMLInputElement> & IFieldProps
+
+export interface IField extends TypeInputPropsField {}
+```
+
+### Forward ref for a Field
+
+```
+import cn from 'classnames'
+import { forwardRef } from 'react'
+
+import { IField } from './form.interface'
+import styles from './form.module.scss'
+
+// We are showing forwardRef type of element HTMLInputElement and then writting own interface to get access for a properties
+const Field = forwardRef<HTMLInputElement, IField>(
+	({ placeholder, error, type = 'text', style, ...rest }, ref) => {
+		return (
+			// common styles, while we have also upload field
+			<div className={cn(styles.common, styles.field)} style={style}>
+				<label>
+					<span>{placeholder}</span>
+					{/* providig ref to input element, without ref it will be on component refering, but for our library we need to provide throught component direct to input tag */}
+					<input ref={ref} type={type} {...rest} />
+				</label>
+				{error && <div className={styles.error}>{error.message}</div>}
+			</div>
+		)
+	}
+)
+
+Field.displayName = 'Field'
+
+export default Field
+
+```
+
+## Writting AuthFields
+
+### We are taking a property from useForm hook and provider to AuthFeilds component
+
+### And in this component we are providing errors, and register function from useForm
+
+### To Field component that take it through the forward ref
+
+```
+import { FC } from 'react'
+import { FormState, UseFormRegister } from 'react-hook-form'
+
+import Field from '@/components/ui/form-elements/Field'
+import { IAuthInput } from './Auth.interface'
+import { validEmail } from '@/utils/string/regex'
+
+
+interface IAuthFields {
+	register: UseFormRegister<any>
+	formState: FormState<IAuthInput>
+	isPasswordRequired?: boolean
+}
+
+const AuthFields: FC<IAuthFields> = ({
+	register,
+	formState: { errors },
+	isPasswordRequired = false,
+}) => {
+	return (
+		<>
+			<Field
+				{...register('email', {
+					required: 'Email is required',
+					pattern: {
+						value: validEmail,
+						message: 'Please enter a valid email address',
+					},
+				})}
+				placeholder="E-Mail"
+				error={errors.email}
+			/>
+
+			<Field
+				{...register(
+					'password',
+					isPasswordRequired
+						? {
+								required: 'Password is required',
+								minLength: {
+									value: 6,
+									message: 'Min length should more 6 symbols',
+								},
+						  }
+						: {}
+				)}
+				placeholder="Password"
+				type="password"
+				error={errors.password}
+			/>
+		</>
+	)
+}
+
+export default AuthFields
+
+```
+
+## Adding AuthField component to Auth Component in form
+
+```
+
+					<AuthFields
+						formState={formState}
+						register={registerInput}
+						isPasswordRequired
+					/>
+```
