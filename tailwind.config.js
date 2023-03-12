@@ -1,10 +1,17 @@
 /** @type {import('tailwindcss').Config} */
+module.exports = {
+	content: [],
+	theme: {
+		extend: {},
+	},
+	plugins: [],
+}
+/** @type {import('tailwindcss').Config} */
 
 const colors = require('tailwindcss/colors')
 const plugin = require('tailwindcss/plugin')
 
-const accent = '#722ed1'
-const lightAccent = '#f9f0ff'
+const primary = '#E30B13'
 
 module.exports = {
 	content: [
@@ -13,8 +20,7 @@ module.exports = {
 	],
 	theme: {
 		colors: {
-			accent,
-			lightAccent,
+			primary,
 			black: colors.black,
 			white: colors.white,
 			gray: {
@@ -85,7 +91,7 @@ module.exports = {
 		plugin(({ addComponents, theme, addUtilities }) => {
 			addComponents({
 				'.btn-primary': {
-					backgroundColor: accent,
+					backgroundColor: primary,
 					color: '#fff',
 					borderRadius: '0.65rem',
 					transition: 'background-color .3s ease-in-out',

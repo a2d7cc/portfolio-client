@@ -639,3 +639,37 @@ const Auth: FC<IAuth> = () => {
 
 export default Auth
 ```
+
+## Form MarkUp
+
+```
+	return (
+		<Meta title="Auth">
+			<section className={styles.wrapper}>
+				<form onSubmit={handleSubmit(onSubmit)}>
+					<Heading title="Auth" className="mb-6" />
+
+					{/* Auth Fields */}
+
+					<div className={styles.buttons}>
+						<Button
+							type="submit"
+							onClick={() => setType('login')}
+							disabled={isLoading}
+						>
+							Login
+						</Button>
+						<Button
+							type="submit"
+							onClick={() => setType('register')}
+							disabled={isLoading}
+						>
+							Register
+						</Button>
+					</div>
+				</form>
+			</section>
+		</Meta>
+	)
+```
+## AuthFields
