@@ -1,11 +1,19 @@
+import { accentColor } from '@/configs/constants'
 import Head from 'next/head'
+import NextNProgress from 'nextjs-progressbar'
 import { FC, PropsWithChildren } from 'react'
-
 import Favicons from './Favicons'
 
 const HeadProvider: FC<PropsWithChildren> = ({ children }) => {
 	return (
 		<>
+			<NextNProgress
+				color={accentColor}
+				startPosition={0.3}
+				stopDelayMs={200}
+				height={3}
+				showOnShallow={true}
+			/>
 			<Head>
 				<meta charSet="UTF-8" />
 				<meta

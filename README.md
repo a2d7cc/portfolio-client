@@ -118,6 +118,53 @@ export const getAdminHomeUrlLink = () => getAdminUrlLink('').slice(0, -1)
 
 ```
 
+# At this point
+
+## We can use custom hook, where will be react query request that used service and
+
+## in service will be used axios
+
+```
+const Sidebar: FC<ISidebar> = () => {
+	const { isLoading, data: categories } = useAllCategories()
+
+	return <div className={styles.header}>Sidebar</div>
+}
+
+export default Sidebar
+```
+
+# Configure Skeleton Loader
+
+## Install
+
+```
+npm install react-loading-skeleton
+```
+
+## Skeleton Loader component
+
+```
+import cn from 'classnames'
+import React, { FC } from 'react'
+import Skeleton, { SkeletonProps } from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+
+const SkeletonLoader: FC<SkeletonProps> = ({ className, ...rest }) => {
+	return (
+		<Skeleton
+			{...rest}
+			baseColor="#1F2125"
+			highlightColor="#292A2E"
+			className={cn('rounded-lg', className)}
+		/>
+	)
+}
+
+export default SkeletonLoader
+
+```
+
 ## Creating HeadProvider
 
 ```
@@ -244,6 +291,27 @@ const MainProvider: FC<PropsWithChildren> = ({ children }) => {
 }
 ```
 
+# Progressbar
+
+## Install
+
+```
+npm i nextjs-progressbar
+
+```
+
+## Adding near in fragment <></> with HeadProvider
+
+```
+			<NextNProgress
+				color={accentColor}
+				startPosition={0.3}
+				stopDelayMs={200}
+				height={3}
+				showOnShallow={true}
+			/>
+```
+
 ## Creating Meta component
 
 ```
@@ -342,37 +410,6 @@ const MainProvider: FC<PropsWithChildren> = ({ children }) => {
 		</Provider>
 	)
 }
-```
-
-# Configure Skeleton Loader
-
-## Install
-
-```
-npm install react-loading-skeleton
-```
-
-## Skeleton Loader component
-
-```
-import cn from 'classnames'
-import React, { FC } from 'react'
-import Skeleton, { SkeletonProps } from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
-
-const SkeletonLoader: FC<SkeletonProps> = ({ className, ...rest }) => {
-	return (
-		<Skeleton
-			{...rest}
-			baseColor="#1F2125"
-			highlightColor="#292A2E"
-			className={cn('rounded-lg', className)}
-		/>
-	)
-}
-
-export default SkeletonLoader
-
 ```
 
 # Configure redux-toast

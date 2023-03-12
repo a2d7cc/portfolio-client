@@ -4,7 +4,7 @@ import { FC, PropsWithChildren } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { Provider } from 'react-redux'
 import HeadProvider from './HeadProvider/HeadProvider'
-import ReduxToast from './ReduxToast.tsx'
+import ReduxToast from './ReduxToast'
 
 const queryClient = new QueryClient({
 	defaultOptions: {
