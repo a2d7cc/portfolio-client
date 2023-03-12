@@ -514,3 +514,128 @@ const MainProvider: FC<PropsWithChildren> = ({ children }) => {
 
 export default MainProvider
 ```
+
+# React Hook Form & Auth
+
+### Install libraries
+
+```
+npm i react-hook-form
+npm install -D @tailwindcss/forms @tailwindcss/aspect-ratio
+```
+
+### Add plugins in tailwind.config.js
+
+```
+		require('@tailwindcss/forms'),
+		require('@tailwindcss/aspect-ratio'),
+```
+
+## Creating auth.tsx page in pages folder of Next.js
+
+```
+import Home from '@/components/screens/home/Home'
+import type { NextPage } from 'next'
+
+const AuthPage: NextPage = () => {
+	return <Auth />
+}
+
+export default AuthPage
+
+```
+
+## Generate Auth folder structure | Component
+
+```
+const AuthPage: NextPage = () => {
+	return <Auth />
+}
+
+export default AuthPage
+```
+
+## Make a redirect functional after success registration, login
+
+### Creating useAuth in hooks folder that return user
+
+```
+export const useAuth = () => ({
+	user: null,
+	isLoading: false
+})
+```
+
+### Creating useAuthRedirect logic
+
+```
+import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
+
+export const useAuthRedirect = () => {
+	// To get user
+	const { user } = useAuth()
+
+	// query to get parametr, push to redirect
+	const { query, push } = useRouter()
+
+	const redirect = query.redirect ? String(query.redirect) : '/'
+
+	// when we get user after completed register, login redirect
+	useEffect(() => {
+		if (user) push(redirect)
+	}, [user, redirect, push])
+}
+
+```
+
+## Writting interface IAuthInput
+
+```
+export interface IAuthInput {
+	email: string
+	password: string
+}
+```
+
+## Writting Auth component
+
+```
+const Auth: FC<IAuth> = () => {
+	// redirect when get user, after successed registration
+	useAuthRedirect()
+
+	// to get isLoading status
+	const { isLoading } = useAuth()
+
+	// type of forme with local state
+	const [type, setType] = useState<'login' | 'register'>('login')
+
+	// Init useForm
+	const {
+		register: registerInput,
+		handleSubmit,
+		formState,
+		reset,
+	} = useForm<IAuthInput>({
+		mode: 'onChange',
+	})
+
+	// Empty functions
+	const login = (data: any) => {}
+	const register = (data: any) => {}
+
+	// Interface show what contained in data
+	const onSubmit: SubmitHandler<IAuthInput> = (data) => {
+		if (type === 'login') login(data)
+		else if (type === 'register') register(data)
+
+		reset()
+	}
+
+	return <div className={styles.auth}>Auth</div>
+}
+
+export default Auth
+```
