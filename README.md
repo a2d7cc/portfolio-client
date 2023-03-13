@@ -1097,3 +1097,258 @@ export const useAuth = () => useTypedSelector(state => state.user)
 ```
 	const { login, register } = useActions()
 ```
+
+# Axios Interceptors
+
+- We are using interceptors, where another instance of acios put tokens
+- And also process situation, when the jwt token expired
+
+```
+
+export const instance = axios.create({
+	baseURL: API_URL,
+	headers: getContentType(),
+})
+
+instance.interceptors.request.use((config) => {
+	const accessToken = Cookies.get('accessToken')
+
+	if (config.headers && accessToken) {
+		config.headers.Authorization = `Bearer ${accessToken}`
+	}
+
+	return config
+})
+
+instance.interceptors.response.use(
+	(config) => config,
+	async (error) => {
+		const originalRequest = error.config
+
+		if (
+			error.response.status === 401 &&
+			errorCatch(error) === 'jwt expired' &&
+			errorCatch(error) === 'jwt must be provided' &&
+			!error.config._isRetry
+		) {
+			originalRequest._isRetry = true
+			try {
+				await AuthService.getNewTokens()
+				return instance.request(originalRequest)
+			} catch (error) {
+				if (errorCatch(error) === 'jwt expired') removeTokensStorage()
+			}
+		}
+
+		throw error
+	}
+)
+
+export default instance
+
+```
+
+# AuthProvider and CheckRole
+
+## Creating AuthProvider component
+
+```
+import {FC} from "react"
+
+const AuthProvider: FC = () => {
+	return (
+		<div>
+			AuthProvider
+		</div>
+	)
+};
+
+export default AuthProvider;
+
+```
+
+## Creating Interface to modify NextPage and add TypeRoles options
+
+```
+import { NextPage } from 'next'
+
+export type TypeRoles = {
+	isOnlyAdmin?: boolean
+	isOnlyUser?: boolean
+}
+
+export type NextPageAuth<P = {}> = NextPage<P> & TypeRoles
+
+export type TypeComponentAuthFields = { Component: TypeRoles }
+
+```
+
+## Using this types on pages which can only admin, or can only user visit
+
+```
+import { NextPageAuth } from '@/providers/AuthProvider/auth.types'
+import { NextPage } from 'next'
+
+const AdminPage: NextPageAuth = () => {
+	return <div>AdminPage</div>
+}
+
+AdminPage.isOnlyAdmin = true
+
+export default AdminPage
+
+```
+
+## Writting CheckRole component
+
+```
+import { useRouter } from 'next/router'
+import { FC, PropsWithChildren } from 'react'
+
+import { useAuth } from '@/hooks/useAuth'
+import { TypeComponentAuthFields } from './auth.types'
+
+
+const CheckRole: FC<TypeComponentAuthFields & PropsWithChildren> = ({
+	children,
+	Component: { isOnlyAdmin, isOnlyUser },
+}) => {
+	const { user } = useAuth()
+	const router = useRouter()
+
+	const Children = () => <>{children}</>
+
+	if (user?.isAdmin) return <Children />
+
+	if (isOnlyAdmin) {
+		router.pathname !== '/404' && router.replace('/404')
+		return null
+	}
+
+	const isUser = user && !user.isAdmin
+
+	if (isUser && isOnlyUser) return <Children />
+	else {
+		router.pathname !== '/auth' && router.replace('/auth')
+		return null
+	}
+}
+
+export default CheckRole
+
+```
+
+## Writting AuthProvider
+
+- All this functionallity is disable ssr rendern, while we are doing check about access on client side
+- - Maybe i can later about server side authorisation something fin
+- - Also video about theory in larichev videos again to see
+- Dynamic import also for select library, rating libraries. Some library thats on only on client rendering working
+
+```
+import { useActions } from '@/hooks/useActions'
+import { useAuth } from '@/hooks/useAuth'
+import Cookies from 'js-cookie'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/router'
+import { FC, PropsWithChildren, useEffect } from 'react'
+import { TypeComponentAuthFields } from './auth.types'
+
+const DynamicCheckRole = dynamic(() => import('./CheckRole'), { ssr: false })
+
+const AuthProvider: FC<TypeComponentAuthFields & PropsWithChildren> = ({
+	children,
+	Component: { isOnlyAdmin, isOnlyUser },
+}) => {
+	const { user } = useAuth()
+	const { logout, checkAuth } = useActions()
+
+	const { pathname } = useRouter()
+
+	// Check acessToken on load page
+	useEffect(() => {
+		const accessToken = Cookies.get('accessToken')
+		if (accessToken) checkAuth()
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Check token on change pages
+	useEffect(() => {
+		const refreshToken = Cookies.get('refreshToken')
+		if (!refreshToken && user) {
+			logout()
+		}
+	}, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+
+	return !isOnlyAdmin && !isOnlyUser ? (
+		<>{children}</>
+	) : (
+		<DynamicCheckRole Component={{ isOnlyAdmin, isOnlyUser }}>
+			{children}
+		</DynamicCheckRole>
+	)
+}
+
+export default AuthProvider
+
+```
+
+## Wrapping MainProvider
+
+```
+const MainProvider: FC<PropsWithChildren> = ({ children }) => {
+	return (
+		<HeadProvider>
+			<Provider store={store}>
+				<QueryClientProvider client={queryClient}>
+					<ReduxToast />
+					<AuthProvider>
+						<Layout>{children}</Layout>
+					</AuthProvider>
+				</QueryClientProvider>
+			</Provider>
+		</HeadProvider>
+	)
+}
+
+export default MainProvider
+```
+
+### But we need to throgh our component in this structure
+
+```
+
+const MainProvider: FC<TypeComponentAuthFields & PropsWithChildren> = ({ children, Component }) => {
+	return (
+		<HeadProvider>
+			<Provider store={store}>
+				<QueryClientProvider client={queryClient}>
+					<ReduxToast />
+					<AuthProvider Component={Component}>
+						<Layout>{children}</Layout>
+					</AuthProvider>
+				</QueryClientProvider>
+			</Provider>
+		</HeadProvider>
+	)
+}
+
+export default MainProvider
+
+```
+
+## Change a bit \_app.tsx
+
+```
+
+type TypeAppProps = AppProps & TypeComponentAuthFields
+
+function MyApp({ Component, pageProps }: TypeAppProps) {
+	return (
+		<MainProvider Component={Component}>
+			<Component {...pageProps} />
+		</MainProvider>
+	)
+}
+
+export default MyApp
+```
