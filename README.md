@@ -797,3 +797,303 @@ export default AuthFields
 						isPasswordRequired
 					/>
 ```
+
+# Redux Authorization
+
+- Creating user folder in store folder with:
+  - user.actions.ts
+  - user.interface.ts
+  - user.slice.ts
+
+## user.interface.ts & user.type.ts
+
+user.type.ts
+
+```
+export interface IUser {
+	_id: string
+	email: string
+	password: string
+	createdAt: string
+	isAdmin: boolean
+}
+```
+
+user.interface.ts
+
+```
+import { IUser } from "@/shared/types/user.types"
+
+export interface IUserState {
+	email: string
+	isAdmin: boolean
+}
+
+export interface ITokens {
+	accessToken: string
+	refreshToken: string
+}
+
+export interface IInitialState {
+	user: IUserState | null
+	isLoading: boolean
+}
+
+export interface IEmailPassword {
+	email: string
+	password: string
+}
+
+export interface IAuthResponse extends ITokens{
+	 user: IUser & {
+		isAdmin: boolean
+	 }
+}
+```
+
+## Local storage utils function
+
+```
+export const getStoreLocal = (name: string) => {
+	if (typeof localStorage !== 'undefined') {
+		const ls = localStorage.getItem(name)
+		return ls ? JSON.parse(ls) : null
+	}
+	return null
+}
+
+```
+
+## Writting User slice file
+
+```
+import { getStoreLocal } from '@/utils/Storage/local-storage'
+import { createSlice } from '@reduxjs/toolkit'
+import { IInitialState } from './user.interface'
+
+// Initial state take a user from Localstorage, if there is
+const initialState: IInitialState = {
+	isLoading: false,
+	user: getStoreLocal('user'),
+}
+
+// Extra reducers for async requests
+export const userSlice = createSlice({
+	name: 'user',
+	initialState,
+	reducers: {},
+	extraReducers: (builder) => {}
+})
+
+export const {reducer} = userSlice
+```
+
+## Adding reducer to root reeducer
+
+```
+import { reducer as toastrReducer } from 'react-redux-toastr'
+import {reducer as userReducer} from './user/user.slice'
+
+export const reducers = {
+	toastr: toastrReducer,
+	user: userReducer
+}
+
+```
+
+## Writting user.actions
+
+- First generic is response from server and the second it's what we are providing in function
+- thunkApi(it's after {email, password}) we are using to process errors and give reject
+
+```
+export const register = createAsyncThunk<IAuthResponse, IEmailPassword>(
+	'auth/register',
+	async ({ email, password }, thunkApi) => {
+		try {
+			const response = await AuthService.register(email, password)
+			toastr.success('Registration', 'Completed successfully')
+			return response.data
+		} catch (error) {
+			toastrError(error)
+			return thunkApi.rejectWithValue(error)
+		}
+	}
+)
+
+- Here we are checkiung error and when expired, than dispatch logout function
+export const checkAuth = createAsyncThunk<IAuthResponse>(
+	'auth/check-auth',
+	async (_, thunkApi) => {
+		try {
+			const response = await AuthService.getNewTokens()
+			return response.data
+		} catch (error) {
+			if (errorCatch(error) === 'jwt expired') {
+				toastrError(
+					'Logout',
+					'Your authorization  is finished, please sign it again'
+				)
+				thunkApi.dispatch(logout())
+			}
+			return thunkApi.rejectWithValue(error)
+		}
+	}
+)
+
+export const logout = createAsyncThunk('auth/logout', async (_, thunkApi) => {
+	await AuthService.logout()
+})
+
+```
+
+### toastError function in utils to display errors
+
+```
+import { errorCatch } from "api/api.helpers"
+import { toastr } from "react-redux-toastr"
+
+export const toastrError = (error: any, title?:string) => {
+const message =  errorCatch(error)
+toastr.error(title || 'Error request', message)
+throw message
+}
+```
+
+### ErrorCatch in api.helpers
+
+```
+export const errorCatch = (error: any): string =>
+	error.response && error.response.data
+		? typeof error.response.data.message === 'object'
+			? error.response.data.message[0]
+			: error.response.data.message
+		: error.message
+
+```
+
+## AuthService
+
+```
+export const AuthService = {
+	async register(email: string, password: string) {
+		const response = await axiosClassic.post<IAuthResponse>(
+			getAuthUrl('/registration'),
+			{ email, password }
+		)
+		if (response.data.accessToken) {
+			saveToStorage(response.data)
+		}
+		return response
+	},
+}
+```
+
+### AuthHelper to manipulate with tokens due Cookies, Localstorage
+
+```
+npm i js-cookie
+npm i --save-dev @types/js-cookie`
+```
+
+- Save tokens to cookies, save user to localStorage
+
+```
+import Cookies from 'js-cookie'
+
+import { IAuthResponse, ITokens } from '@/store/user/user.interface'
+
+export const saveTokensStorage = (data: ITokens) => {
+	Cookies.set('accessToken', data.accessToken)
+	Cookies.set('refreshToken', data.refreshToken)
+}
+
+export const saveToStorage = (data: IAuthResponse) => {
+	saveTokensStorage(data)
+	localStorage.setItem('user', JSON.stringify(data.user))
+}
+
+export const removeTokensStorage = () => {
+	Cookies.remove('accessToken')
+	Cookies.remove('refreshToken')
+	localStorage.removeItem('user')
+}
+
+```
+
+## Writting user slice in extraReducer to async methods
+
+```
+extraReducers: (builder) => {
+		builder
+			/* Register */
+			.addCase(register.pending, (state) => {
+				state.isLoading = true
+			})
+			.addCase(register.fulfilled, (state, { payload }) => {
+				state.isLoading = false
+				state.user = payload.user
+			})
+			.addCase(register.rejected, (state) => {
+				state.isLoading = false
+				state.user = null
+			}
+		}
+```
+
+# Creating rooActions
+
+```
+import * as userActions from './user/user.actions'
+
+export const allActions = {
+	...userActions,
+}
+
+```
+
+# Creating useActions
+
+- binding with dispatch all hooks and memorizing
+
+```
+import { bindActionCreators } from '@reduxjs/toolkit'
+import { useMemo } from 'react'
+import { useDispatch } from 'react-redux'
+
+import { allActions } from '@/store/rootActions'
+
+export const useActions = () => {
+	const dispatch = useDispatch()
+
+	return useMemo(() => bindActionCreators(allActions, dispatch), [dispatch])
+}
+
+```
+
+# UseTypedSelector
+
+- typiyierung state
+
+```
+import { TypeRootState } from "@/store/store";
+import { TypedUseSelectorHook, useSelector } from "react-redux";
+
+export const useTypedSelector: TypedUseSelectorHook<TypeRootState> = useSelector
+```
+
+## Rewrite useAuth hook
+
+- We are using to take a user
+
+```
+import { useTypedSelector } from "./useTypedSelector";
+
+export const useAuth = () => useTypedSelector(state => state.user)
+```
+
+## Adding to Auth component our functions
+
+```
+	const { login, register } = useActions()
+```
